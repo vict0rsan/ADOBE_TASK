@@ -15,6 +15,15 @@ public class Order {
     @Column(name = "id", nullable = false)
     private String id = UUID.randomUUID().toString();
 
+    /*
+        We could follow a different approach so each book
+        could have its own quantity instead of sharing that
+        amount with the other ones by removing the books
+        and quantity attributes and replacing them with
+        a List<Pair<Book, Integer> so our order could have
+        a custom quantity for each book
+     */
+
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Book> books;
 
