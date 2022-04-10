@@ -33,8 +33,6 @@ import java.util.regex.Pattern;
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(controllers = OrderController.class)
 public class OrderControllerTest {
-    private final static Pattern UUID_REGEX_PATTERN =
-            Pattern.compile("^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$");
 
     private final static Integer BAD_REQUEST_VALUE = HttpStatus.BAD_REQUEST.value();
     private final static Integer OK_VALUE = HttpStatus.OK.value();
@@ -57,8 +55,9 @@ public class OrderControllerTest {
     @Test
     void validateSuccessOrderWithUniqueId() throws Exception {
         //given an order
+        Order order = getOrderObject();
         Mockito.when(bookStockRepository.findByName(any(String.class))).thenReturn(getBookStockObject());
-        Mockito.when(orderRepository.save(any(Order.class))).thenReturn(getOrderObject());
+        Mockito.when(orderRepository.save(any(Order.class))).thenReturn(order);
 
         //when the order is posted
         MvcResult mcvResult = mockMvc.perform(post("/orders/")
@@ -66,9 +65,9 @@ public class OrderControllerTest {
                         .content(objectMapper.writeValueAsBytes(formOrderModel(DEFAULT_QUANTITY))))
                         .andReturn();
 
-        //then the gets the order id
+        //then we obtain the order id
         String actualResponseBody = mcvResult.getResponse().getContentAsString();
-        assertThat(actualResponseBody).matches(UUID_REGEX_PATTERN);
+        assertThat(actualResponseBody).isEqualTo(order.getId());
     }
 
     @Test
@@ -150,9 +149,10 @@ public class OrderControllerTest {
     @Test
     void validateStockUpdatingFails() throws Exception {
         //given an order which stock cannot be updated
+        Order order = getOrderObject();
         Mockito.when(bookStockRepository.findByName(any(String.class))).thenReturn(getBookStockObject());
         Mockito.when(bookStockRepository.save(any(BookStock.class))).thenThrow(RuntimeException.class);
-        Mockito.when(orderRepository.save(any(Order.class))).thenReturn(getOrderObject());
+        Mockito.when(orderRepository.save(any(Order.class))).thenReturn(order);
 
         //when the order is posted without errors
         MvcResult mvcResult = mockMvc.perform(post("/orders/")
@@ -162,7 +162,7 @@ public class OrderControllerTest {
 
         //then the user keeps getting the order id
         String actualResponseBody = mvcResult.getResponse().getContentAsString();
-        assertThat(actualResponseBody).matches(UUID_REGEX_PATTERN);
+        assertThat(actualResponseBody).isEqualTo(order.getId());
     }
 
 
